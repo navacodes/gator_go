@@ -6,62 +6,68 @@ import (
 	"path/filepath"
 )
 
+const configFileName = ".gatorconfig.json"
+
 type Config struct {
 	DbURL           string `json:"db_url"`
 	CurrentUsername string `json:"current_user_name"`
 }
 
+func (cfg *Config) SetUser(username string) error {
+	cfg.CurrentUsername = username
+
+	return write(*cfg)
+}
+
 //Read functions
 
 func Read() (Config, error) {
-	//Get home directory
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return Config{}, err
-	}
-	configPath := filepath.Join(homeDir, ".gatorconfig.json")
-	//read file contents
-
-	data, err := os.ReadFile(configPath)
-	if err != nil {
-		return Config{}, err
-	}
-	//unmarshal json data
-	var config Config
-
-	err = json.Unmarshal(data, &config)
+	fullPath, err := getConfigFilePath()
 	if err != nil {
 		return Config{}, err
 	}
 
-	return config, nil
+	file, err := os.Open(fullPath)
+	if err != nil {
+		return Config{}, err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	cfg := Config{}
+	err = decoder.Decode(&cfg)
+	if err != nil {
+		return Config{}, err
+	}
+
+	return cfg, nil
 }
 
-// SetUser updates the current username in the config and saves it back to the file
-
-func (c *Config) SetUser(username string) error {
-	// update the username field memory
-	c.CurrentUsername = username
-
-	// get home directory to write back to the file
-	homeDir, err := os.UserHomeDir()
+func getConfigFilePath() (string, error) {
+	home, err := os.UserHomeDir()
 	if err != nil {
-		return err
+		return "", err
 	}
-	// build the config path
-	configPath := filepath.Join(homeDir, ".gatorconfig.json")
+	fullPath := filepath.Join(home, configFileName)
+	return fullPath, nil
+}
 
-	//marshal(returns json as a byte slice) the updated config to json
-	data, err := json.Marshal(c)
-	if err != nil {
-		return err
-	}
-	//write the updated json data back to the file
-	// 0600 is the file permission(read and write for the owner only)
-	err = os.WriteFile(configPath, data, 0600)
+func write(cfg Config) error {
+	fullPath, err := getConfigFilePath()
 	if err != nil {
 		return err
 	}
 
+	file, err := os.Create(fullPath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	err = encoder.Encode(cfg)
+	if err != nil {
+		return err
+	}
 	return nil
 }
