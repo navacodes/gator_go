@@ -2,11 +2,14 @@ package main
 
 import (
 	"errors"
+
 	"github.com/navacodes/gator_go/internal/config"
+	"github.com/navacodes/gator_go/internal/database"
 )
 
 type State struct {
 	cfg *config.Config
+	db  *database.Queries
 }
 
 type Command struct {

@@ -1,0 +1,23 @@
+# Generated files
+internal/database/
+
+# Config files with sensitive data
+.gatorconfig.json
+
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+gator
+
+# Go test files
+*.test
+*.out
+
+
+
+# OS files
+.DS_Store
+Thumbs.db
